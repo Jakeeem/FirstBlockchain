@@ -1,4 +1,9 @@
 # FirstBlockchain
 Simple blockchain implementation
 
-First Commit.
+Required dependencies:
+- Node.js
+
+Must run `npm install crypto discovery-swarm dat-swarm-defaults get-port --save` before running
+
+Navigate to p2p.js in multiple terminals, run command `node p2p.js` in as many terminals as desired and each terminal will send and receive "hello, world!" once. 
