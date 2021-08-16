@@ -58,32 +58,23 @@ const swarm = Swarm(config);
             switch (message.type) {
                 case MessageType.REQUEST_BLOCK:
                     console.log('---------- REQUEST_BLOCK ----------');
-            
                     let requestedIndex = (JSON.parse(JSON.stringify(message.data))).index;
-            
                     let requestedBlock = chain.getBlock(requestedIndex);
-            
                     if (requestedBlock)
                         writeMessageToPeerToId(peerId.toString('hex'), MessageType.RECEIVE_NEXT_BLOCK, requestedBlock);
                     else
                         console.log('No block found @ index: ' + requestedIndex);
-                    
                     console.log('---------- REQUEST_BLOCK ----------')
-            
                     break;
                 case MessageType.RECEIVE_NEXT_BLOCK:
                     console.log('---------- RECEIVE_NEXT_BLOCK ----------');
-                    
                     chain.addBlock(JSON.parse(JSON.stringify(message.data)));
-            
                     console.log(JSON.stringify(chain.blockchain));
-            
+
                     let nextBlockIndex = chain.getLatestBlock().index+1;
-            
                     console.log('-- request next block @ index: ' + nextBlockIndex);
-            
+
                     writeMessageToPeers(MessageType.REQUEST_BLOCK, {index: nextBlockIndex});
-            
                     console.log('---------- RECEIVE_NEXT_BLOCK ----------');
                     break;
             }
@@ -108,10 +99,6 @@ const swarm = Swarm(config);
         connSeq++
     })
 })();
-
-setTimeout(function(){
-    writeMessageToPeers('hello, Beeb!', null);
-}, 10000);
 
 writeMessageToPeers = (type, data) => {
     for (let id in peers) {
