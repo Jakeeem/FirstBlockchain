@@ -3,17 +3,20 @@
 const crypto = require('crypto'),
     Swarm = require('discovery-swarm'),
     defaults = require('dat-swarm-defaults'),
-    getPort = require('get-port');
+    getPort = require('get-port'),
+    chain = require("./chain");
 
 const peers = {};
 let connSeq = 0;
 let channel = 'myBlockchain'
 
-const chain = require("./chain");
+let registeredMiners = [];
+let lastBlockMinedBy = null;
+
 let MessageType = {
-    REQUEST_LATEST_BLOCK: 'requestLatestBlock',
-    LATEST_BLOCK: 'latestBlock'
-}
+    REQUEST_BLOCK: 'requestBlock',
+    RECEIVE_NEXT_BLOCK: 'receiveNextBlock'
+};
 
 const myPeerId = crypto.randomBytes(32);
 console.log('myPeerId: ' + myPeerId.toString('hex'));
