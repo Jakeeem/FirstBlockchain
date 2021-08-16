@@ -9,6 +9,12 @@ const peers = {};
 let connSeq = 0;
 let channel = 'myBlockchain'
 
+const chain = require("./chain");
+let MessageType = {
+    REQUEST_LATEST_BLOCK: 'requestLatestBlock',
+    LATEST_BLOCK: 'latestBlock'
+}
+
 const myPeerId = crypto.randomBytes(32);
 console.log('myPeerId: ' + myPeerId.toString('hex'));
 
@@ -48,7 +54,42 @@ const swarm = Swarm(config);
                 'type: ' + JSON.stringify(message.type)
             );
             console.log('---------- Received Message End ----------')
+
+            switch (message.type) {
+                case MessageType.REQUEST_BLOCK:
+                    console.log('---------- REQUEST_BLOCK ----------');
+            
+                    let requestedIndex = (JSON.parse(JSON.stringify(message.data))).index;
+            
+                    let requestedBlock = chain.getBlock(requestedIndex);
+            
+                    if (requestedBlock)
+                        writeMessageToPeerToId(peerId.toString('hex'), MessageType.RECEIVE_NEXT_BLOCK, requestedBlock);
+                    else
+                        console.log('No block found @ index: ' + requestedIndex);
+                    
+                    console.log('---------- REQUEST_BLOCK ----------')
+            
+                    break;
+                case MessageType.RECEIVE_NEXT_BLOCK:
+                    console.log('---------- RECEIVE_NEXT_BLOCK ----------');
+                    
+                    chain.addBlock(JSON.parse(JSON.stringify(message.data)));
+            
+                    console.log(JSON.stringify(chain.blockchain));
+            
+                    let nextBlockIndex = chain.getLatestBlock().index+1;
+            
+                    console.log('-- request next block @ index: ' + nextBlockIndex);
+            
+                    writeMessageToPeers(MessageType.REQUEST_BLOCK, {index: nextBlockIndex});
+            
+                    console.log('---------- RECEIVE_NEXT_BLOCK ----------');
+                    break;
+            }
         });
+
+        
 
         conn.on('close', () => {
             console.log(`Connection ${seq} closed, peerId: ${peerId}`);
@@ -69,7 +110,7 @@ const swarm = Swarm(config);
 })();
 
 setTimeout(function(){
-    writeMessageToPeers('hello, world!', null);
+    writeMessageToPeers('hello, Beeb!', null);
 }, 10000);
 
 writeMessageToPeers = (type, data) => {
@@ -81,12 +122,12 @@ writeMessageToPeers = (type, data) => {
     }
 };
 
-writeMessageToPeerId = (toId, type, data) => {
+writeMessageToPeerToId = (toId, type, data) => {
     for (let id in peers) {
         if (id === toId) {
-            console.log('-------- writeMessageToPeerId Start --------');
+            console.log('-------- writeMessageToPeerToId Start --------');
             console.log('type: ' + type + ', to: ' + toId);
-            console.log('-------- writeMessageToPeerId End --------');
+            console.log('-------- writeMessageToPeerToId End --------');
             sendMessage(id, type, data);
         }
     }
@@ -102,3 +143,8 @@ sendMessage = (id, type, data) => {
         }
     ));
 };
+
+setTimeout(function(){
+    writeMessageToPeers(MessageType.REQUEST_BLOCK, {index:chain.getLatestBlock().index+1});
+}, 5000);
+
